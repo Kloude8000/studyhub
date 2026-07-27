@@ -37,6 +37,15 @@ router.get(
 
 
 
+router.get(
+    "/lecturers/list",
+    protect,
+    authorizeRoles("admin"),
+    courseController.getLecturers
+);
+
+
+
 // ================= GET SINGLE COURSE =================
 router.get("/:id", courseController.getCourseById);
 
@@ -58,6 +67,15 @@ router.delete(
     protect,
     authorizeRoles("lecturer", "admin"),
     courseController.deleteCourse
+);
+
+
+
+router.patch(
+    "/:id/lecturer",
+    protect,
+    authorizeRoles("admin"),
+    courseController.reassignLecturer
 );
 
 

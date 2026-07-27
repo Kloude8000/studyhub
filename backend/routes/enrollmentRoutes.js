@@ -30,6 +30,15 @@ router.get(
 
 
 
+router.delete(
+    "/enroll/:courseId",
+    protect,
+    authorizeRoles("student"),
+    enrollmentController.unenrollFromCourse
+);
+
+
+
 // ================= COURSE ENROLLMENTS =================
 router.get(
     "/course/:courseId",

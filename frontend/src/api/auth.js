@@ -8,3 +8,5 @@ export const register = (full_name, email, password) =>
 
 export const createLecturer = (payload) =>
     api.post("/api/auth/users/lecturer", payload);
+
+export { getProfile, updateProfile } from "./profile";

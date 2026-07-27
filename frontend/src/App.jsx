@@ -17,6 +17,9 @@ import LecturerCourseManagePage from "./pages/lecturer/LecturerCourseManagePage"
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCoursesPage from "./pages/admin/AdminCoursesPage";
 import AdminCreateLecturerPage from "./pages/admin/AdminCreateLecturerPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import AdminReportsPage from "./pages/admin/AdminReportsPage";
+import ProfilePage from "./pages/ProfilePage";
 
 function HomeRedirect() {
     const { isAuthenticated, homePath } = useAuth();
@@ -29,6 +32,14 @@ export default function App() {
             <Route path="/" element={<HomeRedirect />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route
+                path="/profile"
+                element={
+                    <ProtectedRoute roles={[ROLES.STUDENT, ROLES.LECTURER, ROLES.ADMIN]}>
+                        <ProfilePage />
+                    </ProtectedRoute>
+                }
+            />
 
             <Route
                 path="/student"
@@ -133,6 +144,22 @@ export default function App() {
                 element={
                     <ProtectedRoute roles={[ROLES.ADMIN]}>
                         <AdminCreateLecturerPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/admin/users"
+                element={
+                    <ProtectedRoute roles={[ROLES.ADMIN]}>
+                        <AdminUsersPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/admin/reports"
+                element={
+                    <ProtectedRoute roles={[ROLES.ADMIN]}>
+                        <AdminReportsPage />
                     </ProtectedRoute>
                 }
             />

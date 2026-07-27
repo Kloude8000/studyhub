@@ -3,5 +3,6 @@ export const studentNav = [
     { to: "/student/courses", label: "Browse courses" },
     { to: "/student/enrollments", label: "My enrollments" },
     { to: "/student/journal", label: "Study journal" },
-    { to: "/student/progress", label: "Progress" }
+    { to: "/student/progress", label: "Progress" },
+    { to: "/profile", label: "Profile" }
 ];

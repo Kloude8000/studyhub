@@ -13,3 +13,8 @@ export const updateCourse = (id, payload) =>
     api.put(`/api/courses/${id}`, payload);
 
 export const deleteCourse = (id) => api.delete(`/api/courses/${id}`);
+
+export const getLecturers = () => api.get("/api/courses/lecturers/list");
+
+export const reassignLecturer = (courseId, lecturerId) =>
+    api.patch(`/api/courses/${courseId}/lecturer`, { lecturer_id: lecturerId });

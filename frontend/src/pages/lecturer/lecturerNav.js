@@ -1,5 +1,6 @@
 export const lecturerNav = [
     { to: "/lecturer", label: "Dashboard", end: true },
     { to: "/lecturer/courses", label: "My courses" },
-    { to: "/lecturer/courses/new", label: "Create course" }
+    { to: "/lecturer/courses/new", label: "Create course" },
+    { to: "/profile", label: "Profile" }
 ];

@@ -3,9 +3,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Badge from "./ui/Badge";
 import Button from "./ui/Button";
 import { Field, TextArea, TextInput } from "./ui/Input";
-import { updateLearningLog } from "../api/progress";
+import { updateLearningLog, deleteLearningLog } from "../api/progress";
 import { getErrorMessage } from "../api/client";
 import { useToast } from "../context/ToastContext";
+import { useConfirm } from "../context/ConfirmContext";
 import styles from "./LearningLogEntry.module.css";
 
 const formatLogDate = (value) => {
@@ -29,6 +30,7 @@ export default function LearningLogEntry({
 }) {
     const queryClient = useQueryClient();
     const { showToast } = useToast();
+    const { confirm } = useConfirm();
     const [isEditing, setIsEditing] = useState(false);
     const [form, setForm] = useState(() => buildFormState(log));
 
@@ -51,6 +53,33 @@ export default function LearningLogEntry({
         },
         onError: (err) => showToast(getErrorMessage(err), "error")
     });
+
+    const deleteMutation = useMutation({
+        mutationFn: () => deleteLearningLog(log.log_id),
+        onSuccess: async () => {
+            showToast("Journal entry deleted.");
+            await queryClient.invalidateQueries({ queryKey: ["student-logs"] });
+            await queryClient.invalidateQueries({
+                queryKey: ["course-logs", String(log.course_id)]
+            });
+            await queryClient.invalidateQueries({ queryKey: ["student-progress"] });
+        },
+        onError: (err) => showToast(getErrorMessage(err), "error")
+    });
+
+    const handleDelete = async () => {
+        const confirmed = await confirm({
+            title: "Delete journal entry?",
+            message: `Remove "${log.topic}" from your journal?`,
+            confirmLabel: "Delete",
+            cancelLabel: "Cancel",
+            danger: true
+        });
+
+        if (confirmed) {
+            deleteMutation.mutate();
+        }
+    };
 
     const handleCancel = () => {
         setForm(buildFormState(log));
@@ -167,6 +196,14 @@ export default function LearningLogEntry({
                         }}
                     >
                         Edit
+                    </Button>
+                    <Button
+                        small
+                        variant="danger"
+                        onClick={handleDelete}
+                        disabled={deleteMutation.isPending}
+                    >
+                        Delete
                     </Button>
                 </div>
             </div>

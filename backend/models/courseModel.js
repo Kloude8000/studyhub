@@ -6,15 +6,16 @@ const createCourse = (courseData, callback) => {
 
     const sql = `
         INSERT INTO courses
-        (course_code, course_title, description, lecturer_id)
-        VALUES (?, ?, ?, ?)
+        (course_code, course_title, description, lecturer_id, completion_target_minutes)
+        VALUES (?, ?, ?, ?, ?)
     `;
 
     db.query(sql, [
         courseData.course_code,
         courseData.course_title,
         courseData.description,
-        courseData.lecturer_id
+        courseData.lecturer_id,
+        courseData.completion_target_minutes ?? 1000
     ], callback);
 
 };
@@ -75,7 +76,11 @@ const updateCourse = (id, lecturerId, data, callback) => {
 
     const sql = `
         UPDATE courses
-        SET course_code = ?, course_title = ?, description = ?
+        SET
+            course_code = ?,
+            course_title = ?,
+            description = ?,
+            completion_target_minutes = ?
         WHERE course_id = ? AND lecturer_id = ?
     `;
 
@@ -83,6 +88,7 @@ const updateCourse = (id, lecturerId, data, callback) => {
         data.course_code,
         data.course_title,
         data.description,
+        data.completion_target_minutes ?? 1000,
         id,
         lecturerId
     ], callback);
@@ -96,7 +102,11 @@ const updateCourseById = (id, data, callback) => {
 
     const sql = `
         UPDATE courses
-        SET course_code = ?, course_title = ?, description = ?
+        SET
+            course_code = ?,
+            course_title = ?,
+            description = ?,
+            completion_target_minutes = ?
         WHERE course_id = ?
     `;
 
@@ -104,6 +114,7 @@ const updateCourseById = (id, data, callback) => {
         data.course_code,
         data.course_title,
         data.description,
+        data.completion_target_minutes ?? 1000,
         id
     ], callback);
 
@@ -139,6 +150,66 @@ const deleteCourseById = (id, callback) => {
 
 
 
+const getCourseTargetMinutes = (courseId, callback) => {
+
+    const sql = `
+        SELECT completion_target_minutes
+        FROM courses
+        WHERE course_id = ?
+    `;
+
+    db.query(sql, [courseId], callback);
+
+};
+
+
+
+const updateCourseLecturer = (courseId, lecturerId, callback) => {
+
+    const sql = `
+        UPDATE courses
+        SET lecturer_id = ?
+        WHERE course_id = ?
+    `;
+
+    db.query(sql, [lecturerId, courseId], callback);
+
+};
+
+
+
+const getLecturers = (callback) => {
+
+    const sql = `
+        SELECT user_id, full_name, email
+        FROM users
+        WHERE role = 'lecturer'
+        ORDER BY full_name ASC
+    `;
+
+    db.query(sql, callback);
+
+};
+
+
+
+const getLecturerDashboardStats = (lecturerId, callback) => {
+
+    const sql = `
+        SELECT
+            COUNT(DISTINCT c.course_id) AS course_count,
+            COUNT(DISTINCT e.enrollment_id) AS total_enrollments
+        FROM courses c
+        LEFT JOIN enrollments e ON c.course_id = e.course_id
+        WHERE c.lecturer_id = ?
+    `;
+
+    db.query(sql, [lecturerId], callback);
+
+};
+
+
+
 module.exports = {
     createCourse,
     getAllCourses,
@@ -147,5 +218,9 @@ module.exports = {
     updateCourse,
     updateCourseById,
     deleteCourse,
-    deleteCourseById
+    deleteCourseById,
+    getCourseTargetMinutes,
+    updateCourseLecturer,
+    getLecturers,
+    getLecturerDashboardStats
 };

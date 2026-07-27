@@ -1,16 +1,18 @@
 const express = require("express");
 
-const protect = require("../middleware/authMiddleware");
-
-const authorizeRoles = require("../middleware/roleMiddleware");
-
 const router = express.Router();
 
 const {
     registerUser,
     loginUser,
-    createLecturer
+    createLecturer,
+    getProfile,
+    updateProfile
 } = require("../controllers/authController");
+
+const protect = require("../middleware/authMiddleware");
+
+const authorizeRoles = require("../middleware/roleMiddleware");
 
 const {
     validateRegister,
@@ -18,8 +20,9 @@ const {
     validateCreateLecturer
 } = require("../validations/authValidation");
 
+const { validateUpdateProfile } = require("../validations/profileValidation");
 
-// Register
+
 router.post(
     "/register",
     validateRegister,
@@ -27,7 +30,6 @@ router.post(
 );
 
 
-// Login
 router.post(
     "/login",
     validateLogin,
@@ -35,7 +37,6 @@ router.post(
 );
 
 
-// Create lecturer (admin only)
 router.post(
     "/users/lecturer",
     protect,
@@ -45,16 +46,16 @@ router.post(
 );
 
 
-router.get("/profile", protect, (req, res) => {
+router.get("/profile", protect, getProfile);
 
-    res.status(200).json({
-        message: "Protected profile route accessed",
-        user: req.user
-    });
+router.put(
+    "/profile",
+    protect,
+    validateUpdateProfile,
+    updateProfile
+);
 
-});
 
-// Lecturer only route
 router.get(
     "/lecturer-dashboard",
     protect,
@@ -69,7 +70,6 @@ router.get(
 );
 
 
-// Admin only route
 router.get(
     "/admin-dashboard",
     protect,
@@ -84,7 +84,6 @@ router.get(
 );
 
 
-// Lecturer or Admin
 router.get(
     "/manage-courses",
     protect,

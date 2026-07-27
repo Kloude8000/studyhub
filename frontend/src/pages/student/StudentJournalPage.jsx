@@ -3,15 +3,37 @@ import AppShell from "../../components/layout/AppShell";
 import Card from "../../components/ui/Card";
 import Spinner from "../../components/ui/Spinner";
 import Alert from "../../components/ui/Alert";
+import Pagination from "../../components/ui/Pagination";
 import LearningLogEntry from "../../components/LearningLogEntry";
 import { getMyLearningLogs } from "../../api/progress";
 import { getErrorMessage } from "../../api/client";
+import { useListControls } from "../../hooks/useListControls";
 import { studentNav } from "./studentNav";
+
+const SORT_OPTIONS = {
+    recent: (a, b) => new Date(b.log_date) - new Date(a.log_date),
+    topic: (a, b) => a.topic.localeCompare(b.topic),
+    course: (a, b) => a.course_title.localeCompare(b.course_title)
+};
 
 export default function StudentJournalPage() {
     const { data, isLoading, error } = useQuery({
         queryKey: ["student-logs"],
         queryFn: async () => (await getMyLearningLogs()).data
+    });
+
+    const {
+        paginatedItems,
+        page,
+        setPage,
+        sortBy,
+        setSortBy,
+        totalPages,
+        totalItems,
+        resetPage
+    } = useListControls(data, {
+        defaultSort: "recent",
+        sortOptions: SORT_OPTIONS
     });
 
     return (
@@ -24,6 +46,22 @@ export default function StudentJournalPage() {
                     </p>
                 </div>
 
+                <label className="field" htmlFor="journal_sort">
+                    <span className="field-label">Sort by</span>
+                    <select
+                        id="journal_sort"
+                        value={sortBy}
+                        onChange={(event) => {
+                            setSortBy(event.target.value);
+                            resetPage();
+                        }}
+                    >
+                        <option value="recent">Most recent</option>
+                        <option value="topic">Topic</option>
+                        <option value="course">Course</option>
+                    </select>
+                </label>
+
                 {isLoading && <Spinner />}
                 {error && <Alert tone="error">{getErrorMessage(error)}</Alert>}
 
@@ -34,7 +72,7 @@ export default function StudentJournalPage() {
                 )}
 
                 <div className="stack">
-                    {(data || []).map((log) => (
+                    {paginatedItems.map((log) => (
                         <Card key={log.log_id}>
                             <LearningLogEntry
                                 log={log}
@@ -43,6 +81,13 @@ export default function StudentJournalPage() {
                         </Card>
                     ))}
                 </div>
+
+                <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    totalItems={totalItems}
+                    onPageChange={setPage}
+                />
             </div>
         </AppShell>
     );

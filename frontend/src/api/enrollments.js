@@ -8,3 +8,6 @@ export const getMyEnrollments = () =>
 
 export const getCourseEnrollments = (courseId) =>
     api.get(`/api/enrollments/course/${courseId}`);
+
+export const unenrollFromCourse = (courseId) =>
+    api.delete(`/api/enrollments/enroll/${courseId}`);

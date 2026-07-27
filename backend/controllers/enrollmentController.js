@@ -93,7 +93,6 @@ const getCourseEnrollments = (req, res) => {
     const { courseId } = req.params;
     const { userId, role } = req.user;
 
-
     canManageCourse(
         courseId,
         userId,
@@ -116,7 +115,6 @@ const getCourseEnrollments = (req, res) => {
                 });
             }
 
-
             enrollmentModel.getCourseEnrollments(
                 courseId,
                 (fetchErr, results) => {
@@ -136,8 +134,60 @@ const getCourseEnrollments = (req, res) => {
 };
 
 
+
+// ================= UNENROLL FROM COURSE =================
+const unenrollFromCourse = (req, res) => {
+
+    const studentId = req.user.userId;
+    const { courseId } = req.params;
+
+    enrollmentModel.checkEnrollment(
+        studentId,
+        courseId,
+        (err, enrollmentResults) => {
+
+            if (err) {
+                return sendServerError(res, err, "Database error");
+            }
+
+            if (enrollmentResults.length === 0) {
+                return res.status(404).json({
+                    message: "You are not enrolled in this course"
+                });
+            }
+
+            enrollmentModel.unenrollStudent(
+                studentId,
+                courseId,
+                (unenrollErr, result) => {
+
+                    if (unenrollErr) {
+                        return sendServerError(res, unenrollErr, "Unenrollment failed");
+                    }
+
+                    if (result.affectedRows === 0) {
+                        return res.status(404).json({
+                            message: "Enrollment not found"
+                        });
+                    }
+
+                    res.json({
+                        message: "Successfully unenrolled from course"
+                    });
+
+                }
+            );
+
+        }
+    );
+
+};
+
+
+
 module.exports = {
     enrollInCourse,
     getMyEnrollments,
-    getCourseEnrollments
+    getCourseEnrollments,
+    unenrollFromCourse
 };

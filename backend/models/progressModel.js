@@ -157,11 +157,13 @@ const getStudentProgress = (
         SELECT
             p.*,
             c.course_code,
-            c.course_title
+            c.course_title,
+            c.completion_target_minutes
         FROM progress p
         JOIN courses c
         ON p.course_id = c.course_id
         WHERE p.student_id = ?
+        ORDER BY p.last_updated DESC
     `;
 
     db.query(sql, [studentId], callback);
@@ -179,11 +181,19 @@ const getCourseProgress = (
     const sql = `
         SELECT
             p.*,
-            u.full_name AS student_name
+            u.full_name AS student_name,
+            u.email AS student_email,
+            (
+                SELECT MAX(l.log_date)
+                FROM learning_logs l
+                WHERE l.student_id = p.student_id
+                AND l.course_id = p.course_id
+            ) AS last_log_date
         FROM progress p
         JOIN users u
         ON p.student_id = u.user_id
         WHERE p.course_id = ?
+        ORDER BY p.completion_percentage ASC, u.full_name ASC
     `;
 
     db.query(sql, [courseId], callback);
@@ -288,6 +298,32 @@ const updateLearningLog = (logId, logData, callback) => {
 
 
 
+const deleteLearningLog = (logId, callback) => {
+
+    const sql = `
+        DELETE FROM learning_logs
+        WHERE log_id = ?
+    `;
+
+    db.query(sql, [logId], callback);
+
+};
+
+
+
+const deleteProgress = (studentId, courseId, callback) => {
+
+    const sql = `
+        DELETE FROM progress
+        WHERE student_id = ? AND course_id = ?
+    `;
+
+    db.query(sql, [studentId, courseId], callback);
+
+};
+
+
+
 module.exports = {
     checkEnrollment,
     createLearningLog,
@@ -300,5 +336,7 @@ module.exports = {
     getStudentLearningLogs,
     getStudentLearningLogsByCourse,
     getLearningLogById,
-    updateLearningLog
+    updateLearningLog,
+    deleteLearningLog,
+    deleteProgress
 };

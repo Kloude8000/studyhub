@@ -1,32 +1,35 @@
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import AppShell from "../../components/layout/AppShell";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import Spinner from "../../components/ui/Spinner";
+import ProgressBar from "../../components/ui/ProgressBar";
 import { Field, TextArea, TextInput } from "../../components/ui/Input";
 import { getCourse } from "../../api/courses";
-import { enrollInCourse, getMyEnrollments } from "../../api/enrollments";
-import {
-    getCourseResources
-} from "../../api/resources";
+import { enrollInCourse, getMyEnrollments, unenrollFromCourse } from "../../api/enrollments";
+import { getCourseResources } from "../../api/resources";
 import {
     addLearningLog,
     getLearningLogsByCourse,
     getMyProgress
 } from "../../api/progress";
+import { getCourseAnnouncements } from "../../api/announcements";
 import { getErrorMessage } from "../../api/client";
 import { useToast } from "../../context/ToastContext";
+import { useConfirm } from "../../context/ConfirmContext";
 import { studentNav } from "./studentNav";
-import { useState } from "react";
 import ResourceActions from "../../components/ResourceActions";
 import LearningLogEntry from "../../components/LearningLogEntry";
 
 export default function StudentCourseDetailPage() {
     const { courseId } = useParams();
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { showToast } = useToast();
+    const { confirm } = useConfirm();
     const [logForm, setLogForm] = useState({
         topic: "",
         study_duration: "",
@@ -44,24 +47,26 @@ export default function StudentCourseDetailPage() {
         queryFn: async () => (await getMyEnrollments()).data
     });
 
+    const isEnrolled = enrollmentsQuery.data?.some(
+        (item) => String(item.course_id) === String(courseId)
+    );
+
     const resourcesQuery = useQuery({
         queryKey: ["course-resources", courseId],
         queryFn: async () => (await getCourseResources(courseId)).data,
-        enabled: Boolean(
-            enrollmentsQuery.data?.some(
-                (item) => String(item.course_id) === String(courseId)
-            )
-        )
+        enabled: Boolean(isEnrolled)
     });
 
     const logsQuery = useQuery({
         queryKey: ["course-logs", courseId],
         queryFn: async () => (await getLearningLogsByCourse(courseId)).data,
-        enabled: Boolean(
-            enrollmentsQuery.data?.some(
-                (item) => String(item.course_id) === String(courseId)
-            )
-        )
+        enabled: Boolean(isEnrolled)
+    });
+
+    const announcementsQuery = useQuery({
+        queryKey: ["course-announcements", courseId],
+        queryFn: async () => (await getCourseAnnouncements(courseId)).data,
+        enabled: Boolean(isEnrolled)
     });
 
     const progressQuery = useQuery({
@@ -69,19 +74,31 @@ export default function StudentCourseDetailPage() {
         queryFn: async () => (await getMyProgress()).data
     });
 
-    const isEnrolled = enrollmentsQuery.data?.some(
-        (item) => String(item.course_id) === String(courseId)
-    );
-
     const courseProgress = progressQuery.data?.find(
         (item) => String(item.course_id) === String(courseId)
     );
+
+    const targetMinutes =
+        courseProgress?.completion_target_minutes
+        ?? courseQuery.data?.completion_target_minutes
+        ?? 1000;
 
     const enrollMutation = useMutation({
         mutationFn: () => enrollInCourse(courseId),
         onSuccess: async () => {
             showToast("Enrollment successful.");
             await queryClient.invalidateQueries({ queryKey: ["student-enrollments"] });
+        },
+        onError: (err) => showToast(getErrorMessage(err), "error")
+    });
+
+    const unenrollMutation = useMutation({
+        mutationFn: () => unenrollFromCourse(courseId),
+        onSuccess: async () => {
+            showToast("You have left the course.");
+            await queryClient.invalidateQueries({ queryKey: ["student-enrollments"] });
+            await queryClient.invalidateQueries({ queryKey: ["student-progress"] });
+            navigate("/student/enrollments");
         },
         onError: (err) => showToast(getErrorMessage(err), "error")
     });
@@ -109,6 +126,20 @@ export default function StudentCourseDetailPage() {
         onError: (err) => showToast(getErrorMessage(err), "error")
     });
 
+    const handleUnenroll = async () => {
+        const confirmed = await confirm({
+            title: "Leave course?",
+            message: "You will lose access to course resources and announcements.",
+            confirmLabel: "Leave course",
+            cancelLabel: "Stay enrolled",
+            danger: true
+        });
+
+        if (confirmed) {
+            unenrollMutation.mutate();
+        }
+    };
+
     if (courseQuery.isLoading || enrollmentsQuery.isLoading) {
         return (
             <AppShell title="Course details" navItems={studentNav}>
@@ -132,6 +163,9 @@ export default function StudentCourseDetailPage() {
                 >
                     <p>{course.description}</p>
                     <p className="muted">Lecturer: {course.lecturer_name}</p>
+                    <p className="muted">
+                        Completion target: {targetMinutes} minutes of logged study time
+                    </p>
 
                     {!isEnrolled ? (
                         <Button
@@ -141,24 +175,55 @@ export default function StudentCourseDetailPage() {
                             {enrollMutation.isPending ? "Enrolling..." : "Enroll in course"}
                         </Button>
                     ) : (
-                        <Badge tone="success">Enrolled</Badge>
+                        <div className="row">
+                            <Badge tone="success">Enrolled</Badge>
+                            <Button
+                                small
+                                variant="danger"
+                                onClick={handleUnenroll}
+                                disabled={unenrollMutation.isPending}
+                            >
+                                Leave course
+                            </Button>
+                        </div>
                     )}
                 </Card>
 
                 {isEnrolled && (
                     <>
+                        <Card title="Announcements">
+                            {announcementsQuery.isLoading && <Spinner />}
+                            {!announcementsQuery.isLoading
+                                && announcementsQuery.data?.length === 0 && (
+                                <p className="muted">No announcements yet.</p>
+                            )}
+                            <div className="stack">
+                                {(announcementsQuery.data || []).map((announcement) => (
+                                    <div key={announcement.announcement_id}>
+                                        <strong>{announcement.title}</strong>
+                                        <p className="muted">
+                                            {announcement.author_name} ·{" "}
+                                            {new Date(
+                                                announcement.created_at
+                                            ).toLocaleDateString()}
+                                        </p>
+                                        <p>{announcement.body}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </Card>
+
                         <Card title="Your progress">
                             {courseProgress ? (
-                                <div className="row">
-                                    <span>
-                                        Study time: {courseProgress.total_study_time} min
-                                    </span>
-                                    <Badge tone="warning">
-                                        {courseProgress.completion_percentage}% complete
-                                    </Badge>
-                                </div>
+                                <ProgressBar
+                                    value={courseProgress.completion_percentage}
+                                    studyMinutes={courseProgress.total_study_time}
+                                    targetMinutes={targetMinutes}
+                                />
                             ) : (
-                                <p className="muted">No progress recorded yet.</p>
+                                <p className="muted">
+                                    No progress recorded yet. Add a learning log to get started.
+                                </p>
                             )}
                         </Card>
 

@@ -1,4 +1,5 @@
 const courseModel = require("../models/courseModel");
+const userModel = require("../models/userModel");
 const sendServerError = require("../utils/sendServerError");
 
 
@@ -11,14 +12,16 @@ const createCourse = (req, res) => {
     const {
         course_code,
         course_title,
-        description
+        description,
+        completion_target_minutes
     } = req.body;
 
     courseModel.createCourse({
         course_code,
         course_title,
         description,
-        lecturer_id
+        lecturer_id,
+        completion_target_minutes
     }, (err, result) => {
 
         if (err) {
@@ -111,10 +114,16 @@ const updateCourse = (req, res) => {
     const {
         course_code,
         course_title,
-        description
+        description,
+        completion_target_minutes
     } = req.body;
 
-    const data = { course_code, course_title, description };
+    const data = {
+        course_code,
+        course_title,
+        description,
+        completion_target_minutes
+    };
 
     const handleResult = (err, result) => {
 
@@ -180,11 +189,84 @@ const deleteCourse = (req, res) => {
 
 
 
+const reassignLecturer = (req, res) => {
+
+    const { id } = req.params;
+    const { lecturer_id } = req.body;
+
+    courseModel.getCourseById(id, (courseErr, courseResults) => {
+
+        if (courseErr) {
+            return sendServerError(res, courseErr, "Error reassigning lecturer");
+        }
+
+        if (courseResults.length === 0) {
+            return res.status(404).json({
+                message: "Course not found"
+            });
+        }
+
+        userModel.findUserById(lecturer_id, (userErr, userResults) => {
+
+            if (userErr) {
+                return sendServerError(res, userErr, "Error reassigning lecturer");
+            }
+
+            if (userResults.length === 0 || userResults[0].role !== "lecturer") {
+                return res.status(400).json({
+                    message: "A valid lecturer must be selected"
+                });
+            }
+
+            courseModel.updateCourseLecturer(id, lecturer_id, (updateErr, result) => {
+
+                if (updateErr) {
+                    return sendServerError(res, updateErr, "Error reassigning lecturer");
+                }
+
+                if (result.affectedRows === 0) {
+                    return res.status(404).json({
+                        message: "Course not found"
+                    });
+                }
+
+                res.json({
+                    message: "Lecturer reassigned successfully"
+                });
+
+            });
+
+        });
+
+    });
+
+};
+
+
+
+const getLecturers = (req, res) => {
+
+    courseModel.getLecturers((err, results) => {
+
+        if (err) {
+            return sendServerError(res, err, "Error fetching lecturers");
+        }
+
+        res.json(results);
+
+    });
+
+};
+
+
+
 module.exports = {
     createCourse,
     getAllCourses,
     getCourseById,
     getMyCourses,
     updateCourse,
-    deleteCourse
+    deleteCourse,
+    reassignLecturer,
+    getLecturers
 };

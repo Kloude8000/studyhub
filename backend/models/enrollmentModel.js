@@ -60,6 +60,7 @@ const getStudentEnrollments = (studentId, callback) => {
         JOIN courses c ON e.course_id = c.course_id
         JOIN users u ON c.lecturer_id = u.user_id
         WHERE e.student_id = ?
+        ORDER BY e.enrolled_at DESC
     `;
 
     db.query(sql, [studentId], callback);
@@ -81,9 +82,24 @@ const getCourseEnrollments = (courseId, callback) => {
         FROM enrollments e
         JOIN users u ON e.student_id = u.user_id
         WHERE e.course_id = ?
+        ORDER BY e.enrolled_at DESC
     `;
 
     db.query(sql, [courseId], callback);
+
+};
+
+
+
+// ================= UNENROLL STUDENT =================
+const unenrollStudent = (studentId, courseId, callback) => {
+
+    const sql = `
+        DELETE FROM enrollments
+        WHERE student_id = ? AND course_id = ?
+    `;
+
+    db.query(sql, [studentId, courseId], callback);
 
 };
 
@@ -94,5 +110,6 @@ module.exports = {
     checkEnrollment,
     enrollStudent,
     getStudentEnrollments,
-    getCourseEnrollments
+    getCourseEnrollments,
+    unenrollStudent
 };

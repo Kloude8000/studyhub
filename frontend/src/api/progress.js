@@ -15,3 +15,12 @@ export const addLearningLog = (payload) =>
 
 export const updateLearningLog = (logId, payload) =>
     api.put(`/api/progress/log/${logId}`, payload);
+
+export const deleteLearningLog = (logId) =>
+    api.delete(`/api/progress/log/${logId}`);
+
+export const exportCourseProgress = (courseId, format) =>
+    api.get(`/api/progress/course/${courseId}/export`, {
+        params: { format },
+        responseType: "blob"
+    });

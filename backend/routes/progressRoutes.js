@@ -37,6 +37,15 @@ router.put(
 
 
 
+router.delete(
+    "/log/:logId",
+    protect,
+    authorizeRoles("student"),
+    progressController.deleteLearningLog
+);
+
+
+
 // ================= GET MY PROGRESS =================
 router.get(
     "/my-progress",
@@ -63,6 +72,16 @@ router.get(
     protect,
     authorizeRoles("student"),
     progressController.getMyLearningLogsByCourse
+);
+
+
+
+// ================= GET COURSE PROGRESS EXPORT =================
+router.get(
+    "/course/:courseId/export",
+    protect,
+    authorizeRoles("lecturer", "admin"),
+    progressController.exportCourseProgress
 );
 
 

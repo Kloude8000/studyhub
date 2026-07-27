@@ -45,6 +45,12 @@ mysql -u root -p < schema.sql
 mysql -u root -p studyhub < seed.sql
 ```
 
+If you already have a StudyHub database, apply the feature migration instead of recreating it:
+
+```bash
+mysql -u root -p studyhub < migrations/001_features.sql
+```
+
 On Windows (PowerShell), you can instead run:
 
 ```powershell
@@ -78,17 +84,34 @@ Authentication uses JWT Bearer tokens: `Authorization: Bearer <token>`.
 
 | Prefix | Description |
 |--------|-------------|
-| `/api/auth` | Register, login, profile, admin lecturer creation |
-| `/api/courses` | Course CRUD and listing |
-| `/api/enrollments` | Student enrollment |
+| `/api/auth` | Register, login, profile update, admin lecturer creation |
+| `/api/courses` | Course CRUD, lecturer list, admin lecturer reassignment |
+| `/api/enrollments` | Student enrollment and unenrollment |
 | `/api/resources` | Course file uploads (PDF, MP4, PNG, JPEG), secure download |
-| `/api/progress` | Learning logs, journal, student progress |
+| `/api/progress` | Learning logs, journal, progress, course progress export |
+| `/api/announcements` | Course announcements for enrolled students |
+| `/api/reports` | Admin user directory and CSV/PDF exports |
+| `/api/dashboard` | Admin and lecturer dashboard summaries |
 
 Uploaded files are stored in `backend/uploads/resources/` and accessed via:
 - `GET /api/resources/:resourceId/view` — inline viewing (PDF, images, video)
 - `GET /api/resources/:resourceId/download` — file download
 
 Both require authentication and course access. Direct `/uploads` URLs are not served publicly.
+
+### Notable endpoints
+
+- `PUT /api/auth/profile` — update name, email, and/or password
+- `DELETE /api/enrollments/enroll/:courseId` — student unenrollment
+- `DELETE /api/progress/log/:logId` — delete a journal entry
+- `GET /api/progress/course/:courseId/export?format=csv|pdf` — lecturer/admin course progress export
+- `GET /api/reports/users?category=lecturers|admins|not_enrolled|students_by_course&courseId=` — admin user directory by category
+- `GET /api/reports/students?status=all|enrolled|unenrolled&courseId=` — student analytics report
+- `GET /api/reports/lecturers` — lecturer analytics report
+- `GET /api/reports/students/:id` — student detail for admin reports
+- `GET /api/reports/*/export?format=csv|pdf` — scoped CSV/PDF exports
+
+Courses support a configurable `completion_target_minutes` field (default `1000`). Student completion percentage is calculated from logged study minutes against that target.
 
 ## Project structure
 

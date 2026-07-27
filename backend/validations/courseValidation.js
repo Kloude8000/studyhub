@@ -20,6 +20,11 @@ const validateCourseCreation = [
         .optional()
         .trim(),
 
+    body("completion_target_minutes")
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage("Completion target must be at least 1 minute"),
+
 
     // Final validation handler
     (req, res, next) => {

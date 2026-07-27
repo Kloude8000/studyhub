@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS courses (
     course_title VARCHAR(255) NOT NULL,
     description TEXT,
     lecturer_id INT NOT NULL,
+    completion_target_minutes INT NOT NULL DEFAULT 1000,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (lecturer_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
@@ -72,4 +73,15 @@ CREATE TABLE IF NOT EXISTS progress (
     UNIQUE KEY unique_progress (student_id, course_id),
     FOREIGN KEY (student_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS announcements (
+    announcement_id INT AUTO_INCREMENT PRIMARY KEY,
+    course_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    body TEXT NOT NULL,
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE CASCADE
 );

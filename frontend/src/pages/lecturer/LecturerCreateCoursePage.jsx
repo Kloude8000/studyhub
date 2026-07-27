@@ -15,7 +15,8 @@ export default function LecturerCreateCoursePage() {
     const [form, setForm] = useState({
         course_code: "",
         course_title: "",
-        description: ""
+        description: "",
+        completion_target_minutes: "1000"
     });
     const [loading, setLoading] = useState(false);
 
@@ -24,7 +25,10 @@ export default function LecturerCreateCoursePage() {
         setLoading(true);
 
         try {
-            const { data } = await createCourse(form);
+            const { data } = await createCourse({
+                ...form,
+                completion_target_minutes: Number(form.completion_target_minutes)
+            });
             showToast("Course created.");
             navigate(`/lecturer/courses/${data.course_id}`);
         } catch (err) {
@@ -84,6 +88,26 @@ export default function LecturerCreateCoursePage() {
                                         description: event.target.value
                                     }))
                                 }
+                            />
+                        </Field>
+
+                        <Field
+                            label="Completion target (minutes)"
+                            htmlFor="completion_target_minutes"
+                            hint="Students reach 100% after logging this many study minutes."
+                        >
+                            <TextInput
+                                id="completion_target_minutes"
+                                type="number"
+                                min="1"
+                                value={form.completion_target_minutes}
+                                onChange={(event) =>
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        completion_target_minutes: event.target.value
+                                    }))
+                                }
+                                required
                             />
                         </Field>
 
