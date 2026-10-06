@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard | StudyHub</title>
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>StudyHub</h2>
+        <button class="close-sidebar" id="closeSidebar">&times;</button>
+      </div>
+      <div class="user-info">
+        <div class="avatar" id="userAvatar">JD</div>
+        <div class="user-details">
+          <span class="user-name" id="userName">John Doe</span>
+          <span class="user-role" id="userRole">student</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <ul>
+          <li><a href="#" data-section="overview" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
+          <li><a href="#" data-section="enrollments"><i class="fas fa-book"></i> My Enrollments</a></li>
+          <li><a href="#" data-section="browse"><i class="fas fa-search"></i> Browse Courses</a></li>
+          <li><a href="#" data-section="journal"><i class="fas fa-pen"></i> Study Journal</a></li>
+          <li><a href="#" data-section="progress"><i class="fas fa-chart-line"></i> Progress</a></li>
+          <li><a href="#" data-section="profile"><i class="fas fa-user"></i> Profile</a></li>
+          <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="topbar">
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <h1 id="pageTitle">Dashboard</h1>
+        <div class="topbar-actions">
+          <span class="greeting" id="greeting">Welcome back!</span>
+        </div>
+      </header>
+
+      <section class="content-area" id="contentArea">
+        <div id="sectionContent">
+          <!-- Overview loaded by default -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

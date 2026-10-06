@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Account | StudyHub</title>
+  <link rel="stylesheet" href="css/register.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="container">
+    <div class="form-wrapper">
+      <div class="brand">
+        <h1>StudyHub</h1>
+        <p>Start your learning journey</p>
+      </div>
+
+      <form id="registerForm" novalidate>
+        <!-- Full Name -->
+        <div class="form-group">
+          <label for="full_name">Full Name</label>
+          <input type="text" id="full_name" placeholder="John Doe" required />
+          <span class="error-message" id="full_name_error"></span>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="you@example.com" required />
+          <span class="error-message" id="email_error"></span>
+        </div>
+
+        <!-- Student ID -->
+        <div class="form-group">
+          <label for="student_id">Student ID</label>
+          <input type="text" id="student_id" placeholder="e.g., S12345" required />
+          <span class="error-message" id="student_id_error"></span>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Min 6 characters" required />
+          <span class="error-message" id="password_error"></span>
+        </div>
+
+        <!-- Confirm Password (client‑side only) -->
+        <div class="form-group">
+          <label for="password_confirmation">Confirm Password</label>
+          <input type="password" id="password_confirmation" placeholder="Repeat your password" required />
+          <span class="error-message" id="confirm_error"></span>
+        </div>
+
+        <button type="submit" id="submitBtn">Create Account</button>
+        <div id="formStatus" class="form-status"></div>
+      </form>
+
+      <p class="login-link">Already have an account? <a href="login.html">Sign in</a></p>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/register.js"></script>
+</body>
+</html>

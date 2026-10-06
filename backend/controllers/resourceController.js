@@ -1,8 +1,13 @@
 const resourceModel = require("../models/resourceModel");
-
+const progressModel = require("../models/progressModel");
+const { canManageCourse, canViewCourseResources } = require("../utils/courseAccess");
+const { formatResource, formatResources } = require("../utils/resourceResponse");
+const { notifyResourceUploaded } = require("../utils/notify");
+const sendServerError = require("../utils/sendServerError");
 const path = require("path");
-
 const fs = require("fs");
+
+const UPLOAD_ROOT = path.resolve("uploads", "resources");
 
 
 
@@ -12,82 +17,67 @@ const uploadResource = (req, res) => {
     try {
 
         const uploaded_by = req.user.userId;
-
+        const { role } = req.user;
         const { courseId } = req.params;
-
         const { title } = req.body;
 
 
-        // File validation
         if (!req.file) {
-
             return res.status(400).json({
                 message: "No file uploaded"
             });
-
         }
 
 
-        // Check course ownership
-        resourceModel.checkCourseOwnership(
+        canManageCourse(
             courseId,
             uploaded_by,
-            (err, results) => {
+            role,
+            (err, access) => {
 
                 if (err) {
-                    return res.status(500).json({
-                        message: "Database error",
-                        error: err
+                    return sendServerError(res, err, "Database error");
+                }
+
+                if (access.notFound) {
+                    return res.status(404).json({
+                        message: "Course not found"
                     });
                 }
 
-                if (results.length === 0) {
-
+                if (!access.allowed) {
                     return res.status(403).json({
-                        message: "You can only upload to your own courses"
+                        message: "You can only upload to courses you manage"
                     });
-
                 }
 
 
                 const resourceData = {
-
                     course_id: courseId,
-
                     uploaded_by,
-
                     title,
-
                     file_path: req.file.path,
-
                     file_type: req.file.mimetype
-
                 };
 
 
                 resourceModel.createResource(
                     resourceData,
-                    (err, result) => {
+                    (createErr, result) => {
 
-                        if (err) {
-
-                            return res.status(500).json({
-                                message: "Upload failed",
-                                error: err
-                            });
-
+                        if (createErr) {
+                            return sendServerError(res, createErr, "Upload failed");
                         }
 
                         res.status(201).json({
-
                             message: "Resource uploaded successfully",
-
-                            resource: {
+                            resource: formatResource({
                                 resource_id: result.insertId,
                                 ...resourceData
-                            }
-
+                            })
                         });
+
+                        notifyResourceUploaded(courseId, title, uploaded_by);
 
                     }
                 );
@@ -96,12 +86,7 @@ const uploadResource = (req, res) => {
         );
 
     } catch (error) {
-
-        res.status(500).json({
-            message: "Server error",
-            error
-        });
-
+        sendServerError(res, error, "Server error");
     }
 
 };
@@ -112,23 +97,213 @@ const uploadResource = (req, res) => {
 const getCourseResources = (req, res) => {
 
     const { courseId } = req.params;
+    const { userId, role } = req.user;
 
-    resourceModel.getResourcesByCourse(
+
+    canViewCourseResources(
         courseId,
-        (err, results) => {
+        userId,
+        role,
+        (err, access) => {
 
             if (err) {
-
-                return res.status(500).json({
-                    message: "Error fetching resources",
-                    error: err
-                });
-
+                return sendServerError(res, err, "Error checking resource access");
             }
 
-            res.json(results);
+            if (access.notFound) {
+                return res.status(404).json({
+                    message: "Course not found"
+                });
+            }
+
+            if (!access.allowed) {
+                return res.status(403).json({
+                    message: "You do not have access to resources for this course"
+                });
+            }
+
+
+            const respondWithResources = (fetchErr, results) => {
+
+                if (fetchErr) {
+                    return sendServerError(res, fetchErr, "Error fetching resources");
+                }
+
+                res.json(formatResources(results));
+
+            };
+
+            if (role === "student") {
+                return resourceModel.getResourcesByCourseForStudent(
+                    courseId,
+                    userId,
+                    respondWithResources
+                );
+            }
+
+            resourceModel.getResourcesByCourse(courseId, respondWithResources);
 
         }
+    );
+
+};
+
+
+
+// ================= SERVE RESOURCE FILE =================
+const serveResource = (
+    resourceId,
+    userId,
+    role,
+    res,
+    disposition,
+    actionLabel
+) => {
+
+    resourceModel.getResourceById(
+        resourceId,
+        (err, resources) => {
+
+            if (err) {
+                return sendServerError(res, err, `Error ${actionLabel} resource`);
+            }
+
+            if (resources.length === 0) {
+                return res.status(404).json({
+                    message: "Resource not found"
+                });
+            }
+
+
+            const resource = resources[0];
+
+
+            canViewCourseResources(
+                resource.course_id,
+                userId,
+                role,
+                (accessErr, access) => {
+
+                    if (accessErr) {
+                        return sendServerError(
+                            res,
+                            accessErr,
+                            `Error ${actionLabel} resource`
+                        );
+                    }
+
+                    if (access.notFound) {
+                        return res.status(404).json({
+                            message: "Course not found"
+                        });
+                    }
+
+                    if (!access.allowed) {
+                        return res.status(403).json({
+                            message: "You do not have access to this resource"
+                        });
+                    }
+
+
+                    const filePath = path.resolve(resource.file_path);
+
+                    if (
+                        !filePath.startsWith(UPLOAD_ROOT + path.sep) &&
+                        filePath !== UPLOAD_ROOT
+                    ) {
+                        return sendServerError(
+                            res,
+                            new Error("Invalid file path"),
+                            `Error ${actionLabel} resource`
+                        );
+                    }
+
+                    if (!fs.existsSync(filePath)) {
+                        return res.status(404).json({
+                            message: "File not found on server"
+                        });
+                    }
+
+
+                    const filename = path.basename(filePath);
+
+                    res.setHeader(
+                        "Content-Type",
+                        resource.file_type || "application/octet-stream"
+                    );
+                    res.setHeader(
+                        "Content-Disposition",
+                        `${disposition}; filename="${filename}"`
+                    );
+
+                    const sendFile = () => res.sendFile(filePath);
+
+                    if (role !== "student") {
+                        return sendFile();
+                    }
+
+                    const record = actionLabel === "downloading"
+                        ? resourceModel.recordResourceDownload
+                        : resourceModel.recordResourceView;
+
+                    record(userId, resource.resource_id, (recordErr) => {
+
+                        if (recordErr) {
+                            console.error("Resource access record failed:", recordErr);
+                        }
+
+                        progressModel.touchLastActivity(
+                            userId,
+                            resource.course_id,
+                            (touchErr) => {
+
+                                if (touchErr) {
+                                    console.error("Last activity update failed:", touchErr);
+                                }
+
+                                sendFile();
+
+                            }
+                        );
+
+                    });
+
+                }
+            );
+
+        }
+    );
+
+};
+
+
+
+// ================= VIEW RESOURCE =================
+const viewResource = (req, res) => {
+
+    serveResource(
+        req.params.resourceId,
+        req.user.userId,
+        req.user.role,
+        res,
+        "inline",
+        "viewing"
+    );
+
+};
+
+
+
+// ================= DOWNLOAD RESOURCE =================
+const downloadResource = (req, res) => {
+
+    serveResource(
+        req.params.resourceId,
+        req.user.userId,
+        req.user.role,
+        res,
+        "attachment",
+        "downloading"
     );
 
 };
@@ -138,35 +313,87 @@ const getCourseResources = (req, res) => {
 // ================= DELETE RESOURCE =================
 const deleteResource = (req, res) => {
 
-    const uploadedBy = req.user.userId;
-
+    const { userId, role } = req.user;
     const { resourceId } = req.params;
 
-    resourceModel.deleteResource(
+
+    resourceModel.getResourceById(
         resourceId,
-        uploadedBy,
-        (err, result) => {
+        (err, resources) => {
 
             if (err) {
-
-                return res.status(500).json({
-                    message: "Error deleting resource",
-                    error: err
-                });
-
+                return sendServerError(res, err, "Error deleting resource");
             }
 
-            if (result.affectedRows === 0) {
-
-                return res.status(403).json({
-                    message: "Not authorized or resource not found"
+            if (resources.length === 0) {
+                return res.status(404).json({
+                    message: "Resource not found"
                 });
-
             }
 
-            res.json({
-                message: "Resource deleted successfully"
-            });
+
+            const resource = resources[0];
+
+
+            const performDelete = (deleteErr, result) => {
+
+                if (deleteErr) {
+                    return sendServerError(res, deleteErr, "Error deleting resource");
+                }
+
+                if (result.affectedRows === 0) {
+                    return res.status(403).json({
+                        message: "Not authorized or resource not found"
+                    });
+                }
+
+                const filePath = path.resolve(resource.file_path);
+
+                if (
+                    filePath.startsWith(UPLOAD_ROOT + path.sep) &&
+                    fs.existsSync(filePath)
+                ) {
+                    fs.unlinkSync(filePath);
+                }
+
+                res.json({
+                    message: "Resource deleted successfully"
+                });
+
+            };
+
+
+            if (role === "admin") {
+                return resourceModel.deleteResourceById(
+                    resourceId,
+                    performDelete
+                );
+            }
+
+
+            canManageCourse(
+                resource.course_id,
+                userId,
+                role,
+                (accessErr, access) => {
+
+                    if (accessErr) {
+                        return sendServerError(res, accessErr, "Error deleting resource");
+                    }
+
+                    if (!access.allowed) {
+                        return res.status(403).json({
+                            message: "Not authorized or resource not found"
+                        });
+                    }
+
+                    resourceModel.deleteResourceById(
+                        resourceId,
+                        performDelete
+                    );
+
+                }
+            );
 
         }
     );
@@ -178,5 +405,7 @@ const deleteResource = (req, res) => {
 module.exports = {
     uploadResource,
     getCourseResources,
+    viewResource,
+    downloadResource,
     deleteResource
 };

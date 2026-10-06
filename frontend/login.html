@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In | StudyHub</title>
+  <link rel="stylesheet" href="css/login.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="container">
+    <div class="form-wrapper">
+      <div class="brand">
+        <h1>StudyHub</h1>
+        <p>Welcome back</p>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <!-- Email or Student ID -->
+        <div class="form-group">
+          <label for="identifier">Email or Student ID</label>
+          <input type="text" id="identifier" placeholder="you@example.com or S12345" required />
+          <span class="error-message" id="identifier_error"></span>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter your password" required />
+          <span class="error-message" id="password_error"></span>
+        </div>
+
+        <button type="submit" id="submitBtn">Sign In</button>
+        <div id="formStatus" class="form-status"></div>
+      </form>
+
+      <p class="register-link">Don't have an account? <a href="register.html">Create one</a></p>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>

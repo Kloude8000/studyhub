@@ -8,8 +8,11 @@ const protect = require("../middleware/authMiddleware");
 
 const authorizeRoles = require("../middleware/roleMiddleware");
 
+const topicController = require("../controllers/topicController");
+
 const {
-    validateCourseCreation
+    validateCourseCreation,
+    validateTopic
 } = require("../validations/courseValidation");
 
 
@@ -27,11 +30,6 @@ router.get("/", courseController.getAllCourses);
 
 
 
-// ================= GET SINGLE COURSE =================
-router.get("/:id", courseController.getCourseById);
-
-
-
 // ================= MY COURSES =================
 router.get(
     "/my-courses",
@@ -42,11 +40,48 @@ router.get(
 
 
 
+router.get(
+    "/:id/topics",
+    protect,
+    topicController.listTopics
+);
+
+router.post(
+    "/:id/topics",
+    protect,
+    authorizeRoles("lecturer", "admin"),
+    validateTopic,
+    topicController.addTopic
+);
+
+router.put(
+    "/:id/topics/:topicId",
+    protect,
+    authorizeRoles("lecturer", "admin"),
+    validateTopic,
+    topicController.updateTopic
+);
+
+router.delete(
+    "/:id/topics/:topicId",
+    protect,
+    authorizeRoles("lecturer", "admin"),
+    topicController.deleteTopic
+);
+
+
+
+// ================= GET SINGLE COURSE =================
+router.get("/:id", courseController.getCourseById);
+
+
+
 // ================= UPDATE COURSE =================
 router.put(
     "/:id",
     protect,
     authorizeRoles("lecturer", "admin"),
+    validateCourseCreation,
     courseController.updateCourse
 );
 

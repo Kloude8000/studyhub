@@ -30,7 +30,38 @@ router.get(
 
 
 
+// ================= UNENROLL FROM COURSE =================
+router.delete(
+    "/unenroll/:courseId",
+    protect,
+    authorizeRoles("student"),
+    enrollmentController.unenrollFromCourse
+);
+
+
+
 // ================= COURSE ENROLLMENTS =================
+router.get(
+    "/course/:courseId/available-students",
+    protect,
+    authorizeRoles("lecturer", "admin"),
+    enrollmentController.getAvailableStudents
+);
+
+router.post(
+    "/course/:courseId/students",
+    protect,
+    authorizeRoles("lecturer", "admin"),
+    enrollmentController.enrollStudentByStaff
+);
+
+router.delete(
+    "/course/:courseId/students/:studentId",
+    protect,
+    authorizeRoles("lecturer", "admin"),
+    enrollmentController.unenrollStudentByStaff
+);
+
 router.get(
     "/course/:courseId",
     protect,

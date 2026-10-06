@@ -32,6 +32,24 @@ router.get(
 
 
 
+// ================= VIEW RESOURCE =================
+router.get(
+    "/:resourceId/view",
+    protect,
+    resourceController.viewResource
+);
+
+
+
+// ================= DOWNLOAD RESOURCE =================
+router.get(
+    "/:resourceId/download",
+    protect,
+    resourceController.downloadResource
+);
+
+
+
 // ================= DELETE RESOURCE =================
 router.delete(
     "/:resourceId",

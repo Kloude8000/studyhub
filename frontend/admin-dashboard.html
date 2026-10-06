@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard | StudyHub</title>
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/lecturer-dashboard.css" />
+  <link rel="stylesheet" href="css/admin-dashboard.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>StudyHub</h2>
+        <button class="close-sidebar" id="closeSidebar">&times;</button>
+      </div>
+      <div class="user-info">
+        <div class="avatar admin-avatar" id="userAvatar">AD</div>
+        <div class="user-details">
+          <span class="user-name" id="userName">Admin</span>
+          <span class="user-role" id="userRole">admin</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <ul>
+          <li><a href="#" data-section="dashboard" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
+          <li><a href="#" data-section="users"><i class="fas fa-users"></i> Users</a></li>
+          <li><a href="#" data-section="courses"><i class="fas fa-book"></i> All Courses</a></li>
+          <li><a href="#" data-section="reports"><i class="fas fa-file-alt"></i> Reports</a></li>
+          <li><a href="#" data-section="announcements"><i class="fas fa-bullhorn"></i> Announcements</a></li>
+          <li><a href="#" data-section="profile"><i class="fas fa-user"></i> Profile</a></li>
+          <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <h1 id="pageTitle">Dashboard</h1>
+        <div class="topbar-actions">
+          <span class="greeting" id="greeting">Welcome back!</span>
+        </div>
+      </header>
+
+      <section class="content-area" id="contentArea">
+        <div id="sectionContent"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Edit Course Modal -->
+  <div class="modal-overlay" id="courseModal">
+    <div class="modal">
+      <h2 id="modalTitle">Edit Course</h2>
+      <form id="courseForm">
+        <input type="hidden" id="editCourseId" />
+        <div class="form-group">
+          <label for="courseCode">Course Code</label>
+          <input type="text" id="courseCode" placeholder="e.g., CS101" required />
+        </div>
+        <div class="form-group">
+          <label for="courseTitle">Course Title</label>
+          <input type="text" id="courseTitle" placeholder="e.g., Programming Fundamentals" required />
+        </div>
+        <div class="form-group">
+          <label for="courseDescription">Description</label>
+          <textarea id="courseDescription" placeholder="Brief description of the course"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="courseLecturer">Lecturer</label>
+          <select id="courseLecturer" required>
+            <option value="">Loading lecturers...</option>
+          </select>
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn-primary" id="modalSubmitBtn">Update Course</button>
+          <button type="button" class="btn-secondary" id="modalCancelBtn">Cancel</button>
+        </div>
+        <div id="modalStatus" class="modal-status"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create Lecturer Modal -->
+  <div class="modal-overlay" id="lecturerModal">
+    <div class="modal">
+      <h2>Create Lecturer Account</h2>
+      <form id="lecturerForm">
+        <div class="form-group">
+          <label for="lecturerName">Full Name</label>
+          <input type="text" id="lecturerName" placeholder="Dr. Jane Smith" required />
+        </div>
+        <div class="form-group">
+          <label for="lecturerEmail">Email</label>
+          <input type="email" id="lecturerEmail" placeholder="lecturer@example.com" required />
+        </div>
+        <div class="form-group">
+          <label for="lecturerPassword">Password</label>
+          <input type="password" id="lecturerPassword" placeholder="Min 6 characters" required />
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn-primary" id="lecturerSubmitBtn">Create Lecturer</button>
+          <button type="button" class="btn-secondary" id="lecturerCancelBtn">Cancel</button>
+        </div>
+        <div id="lecturerStatus" class="modal-status"></div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/admin-dashboard.js"></script>
+</body>
+</html>

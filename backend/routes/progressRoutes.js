@@ -9,7 +9,8 @@ const protect = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/roleMiddleware");
 
 const {
-    validateLearningLog
+    validateLearningLog,
+    validateLearningLogUpdate
 } = require("../validations/progressValidation");
 
 
@@ -25,6 +26,27 @@ router.post(
 
 
 
+// ================= UPDATE LEARNING LOG =================
+router.put(
+    "/log/:logId",
+    protect,
+    authorizeRoles("student"),
+    validateLearningLogUpdate,
+    progressController.updateLearningLog
+);
+
+
+
+// ================= DELETE LEARNING LOG =================
+router.delete(
+    "/log/:logId",
+    protect,
+    authorizeRoles("student"),
+    progressController.deleteLearningLog
+);
+
+
+
 // ================= GET MY PROGRESS =================
 router.get(
     "/my-progress",
@@ -35,12 +57,41 @@ router.get(
 
 
 
+// ================= GET MY LEARNING LOGS (JOURNAL) =================
+router.get(
+    "/logs",
+    protect,
+    authorizeRoles("student"),
+    progressController.getMyLearningLogs
+);
+
+
+
+// ================= GET MY LEARNING LOGS BY COURSE =================
+router.get(
+    "/logs/course/:courseId",
+    protect,
+    authorizeRoles("student"),
+    progressController.getMyLearningLogsByCourse
+);
+
+
+
 // ================= GET COURSE PROGRESS =================
 router.get(
     "/course/:courseId",
     protect,
     authorizeRoles("lecturer", "admin"),
     progressController.getCourseProgress
+);
+
+
+
+router.get(
+    "/course/:courseId/student/:studentId",
+    protect,
+    authorizeRoles("lecturer", "admin"),
+    progressController.getStudentCourseChecklist
 );
 
 

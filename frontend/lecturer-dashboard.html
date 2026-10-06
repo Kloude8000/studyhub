@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lecturer Dashboard | StudyHub</title>
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/lecturer-dashboard.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>StudyHub</h2>
+        <button class="close-sidebar" id="closeSidebar">&times;</button>
+      </div>
+      <div class="user-info">
+        <div class="avatar" id="userAvatar">JD</div>
+        <div class="user-details">
+          <span class="user-name" id="userName">John Doe</span>
+          <span class="user-role" id="userRole">lecturer</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <ul>
+          <li><a href="#" data-section="dashboard" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
+          <li><a href="#" data-section="courses"><i class="fas fa-list"></i> My Courses</a></li>
+          <li><a href="#" data-section="create"><i class="fas fa-plus-circle"></i> Create Course</a></li>
+          <li><a href="#" data-section="announcements"><i class="fas fa-bullhorn"></i> Announcements</a></li>
+          <li><a href="#" data-section="profile"><i class="fas fa-user"></i> Profile</a></li>
+          <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="topbar">
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <h1 id="pageTitle">Dashboard</h1>
+        <div class="topbar-actions">
+          <span class="greeting" id="greeting">Welcome back!</span>
+        </div>
+      </header>
+
+      <section class="content-area" id="contentArea">
+        <div id="sectionContent">
+          <!-- Content loaded dynamically -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal for Create/Edit Course -->
+  <div class="modal-overlay" id="courseModal">
+    <div class="modal">
+      <h2 id="modalTitle">Create Course</h2>
+      <form id="courseForm">
+        <input type="hidden" id="editCourseId" />
+        <div class="form-group">
+          <label for="courseCode">Course Code</label>
+          <input type="text" id="courseCode" placeholder="e.g., CS101" required />
+        </div>
+        <div class="form-group">
+          <label for="courseTitle">Course Title</label>
+          <input type="text" id="courseTitle" placeholder="e.g., Programming Fundamentals" required />
+        </div>
+        <div class="form-group">
+          <label for="courseDescription">Description</label>
+          <textarea id="courseDescription" placeholder="Brief description of the course"></textarea>
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn-primary" id="modalSubmitBtn">Create Course</button>
+          <button type="button" class="btn-secondary" id="modalCancelBtn">Cancel</button>
+        </div>
+        <div id="modalStatus" class="modal-status"></div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/lecturer-dashboard.js"></script>
+</body>
+</html>
